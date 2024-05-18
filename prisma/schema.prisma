@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  email         String      @unique
+  password      String
+  emailVerified DateTime?
+  createdAt     DateTime?   @default(now())
+  EmailSent     EmailSent[]
+  updatedAt     DateTime?   @updatedAt
+  picture       String?
+}
+
+enum EmailPurpose {
+  PASSWORD_RESET
+  ACCOUNT_ACTIVATION
+  NOTIFICATION
+}
+
+enum Status {
+  Done
+  Pending
+  Failed
+}
+
+model EmailSent {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  purpose        EmailPurpose
+  sentTo         String
+  createdAt      DateTime     @default(now())
+  expirationTime DateTime
+  token          String       @unique
+  status         Status
+
+  user User @relation(fields: [sentTo], references: [email])
+}
